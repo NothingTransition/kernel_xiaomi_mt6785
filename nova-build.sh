@@ -38,6 +38,13 @@ fi
 git submodule update --init --recursive
 
 download_clang() {
+    # Prefer a system clang (e.g. Ubuntu 24.04 clang-18) when available;
+    # only fetch AOSP Clang as a fallback for local builds.
+    if command -v clang >/dev/null 2>&1 && command -v ld.lld >/dev/null 2>&1; then
+        echo "==> Using system clang: $(clang --version | head -n1)"
+        return 0
+    fi
+
     if [[ ! -d "$CLANG_DIR/bin" ]]; then
         echo "==> Downloading AOSP Clang..."
 
@@ -81,14 +88,21 @@ _compile_and_package() {
 
     download_clang
 
-    export PATH="$CLANG_DIR/bin:$PATH"
+    if [[ -d "$CLANG_DIR/bin" ]]; then
+        export PATH="$CLANG_DIR/bin:$PATH"
+    fi
 
     mkdir -p "$out_dir"
     rm -f "$out_dir/error.log"
 
     make O="$out_dir" ARCH=arm64 \
+        CC="$CC_CMD" \
         HOSTCC="$HOSTCC_CMD" \
         HOSTCXX="$HOSTCXX_CMD" \
+        LLVM=1 \
+        LLVM_IAS=1 \
+        CROSS_COMPILE=aarch64-linux-gnu- \
+        CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
         "$defconfig"
 
     (

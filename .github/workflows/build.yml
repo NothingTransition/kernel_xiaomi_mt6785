@@ -19,16 +19,44 @@ jobs:
         with:
           submodules: recursive
 
-      - name: "⭐ Install prerequisites"
+      - name: "⭐ Install prerequisites (clang-18 toolchain, no gcc cross compilers)"
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential bc bzip2 zip unzip wget curl \
-            ccache libssl-dev flex bison python3 \
-            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+            bc bzip2 zip unzip wget curl \
+            ccache libssl-dev flex bison python3 build-essential \
+            clang-18 lld-18 llvm-18 libclang-rt-18-dev \
+            binutils-aarch64-linux-gnu
+
+      - name: "🧪 Setup clang-18 as default clang"
+        run: |
+          mkdir -p "$HOME/tcbin"
+          for t in clang clang++ ld.lld lld llvm-ar llvm-nm llvm-objcopy \
+                   llvm-objdump llvm-strip llvm-readelf llvm-size; do
+            if [ -e "/usr/bin/$t-18" ]; then
+              ln -sf "/usr/bin/$t-18" "$HOME/tcbin/$t"
+            fi
+          done
+          echo "$HOME/tcbin" >> "$GITHUB_PATH"
+          export PATH="$HOME/tcbin:$PATH"
+          echo "CC  = $(clang --version | head -n1)"
+          echo "LD  = $(ld.lld --version | head -n1)"
 
       - name: "🚀 Build (KernelSU v3.4.0-legacy + SUSFS v2.3.0 + NoMount)"
-        run: bash ./nova-build.sh -k
+        run: |
+          set -o pipefail
+          bash ./nova-build.sh -k 2>&1 | tee build.log
+
+      - name: "📜 Upload build logs"
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-logs-${{ github.sha }}
+          path: |
+            build.log
+            out-ksu/error.log
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: "💾 Upload AnyKernel3 zip"
         uses: actions/upload-artifact@v7
