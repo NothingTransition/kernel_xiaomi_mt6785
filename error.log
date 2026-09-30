@@ -1,0 +1,20 @@
+../lib/zstd/zstd_decompress_module.c:80:9: warning: 'ZSTD_resetDStream' is deprecated: use ZSTD_DCtx_reset, see zstd.h for detailed instructions [-Wdeprecated-declarations]
+   80 |         return ZSTD_resetDStream(dstream);
+      |                ^
+../include/linux/zstd_lib.h:2568:1: note: 'ZSTD_resetDStream' has been explicitly marked deprecated here
+ 2568 | ZSTD_DEPRECATED("use ZSTD_DCtx_reset, see zstd.h for detailed instructions")
+      | ^
+../include/linux/zstd_lib.h:42:53: note: expanded from macro 'ZSTD_DEPRECATED'
+   42 | #    define ZSTD_DEPRECATED(message) __attribute__((deprecated(message)))
+      |                                                     ^
+1 warning generated.
+../drivers/kernelsu/hook/setuid_hook.c:94:10: error: implicit declaration of function 'susfs_is_sid_equal' [-Werror,-Wimplicit-function-declaration]
+   94 |     if (!susfs_is_sid_equal(current_cred(), susfs_zygote_sid)) {
+      |          ^
+1 error generated.
+make[3]: *** [../scripts/Makefile.build:359: drivers/kernelsu/hook/setuid_hook.o] Error 1
+make[2]: *** [../scripts/Makefile.build:674: drivers/kernelsu] Error 2
+make[1]: *** [/home/runner/work/kernel_xiaomi_mt6785/kernel_xiaomi_mt6785/Makefile:1274: drivers] Error 2
+make[1]: *** Waiting for unfinished jobs....
+lib/nmi_backtrace.o: no symbols
+make: *** [Makefile:153: sub-make] Error 2
