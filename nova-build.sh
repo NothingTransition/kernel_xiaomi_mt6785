@@ -35,7 +35,7 @@ else
     echo "==> ccache not found, builds will not be cached (sudo pacman -S ccache to enable)"
 fi
 
-git submodule update --init --recursive KernelSU
+git submodule update --init --recursive
 
 download_clang() {
     if [[ ! -d "$CLANG_DIR/bin" ]]; then
@@ -179,7 +179,15 @@ build_kernel() {
 }
 
 build_ksu() {
-    patch -d KernelSU -p1 < "$KERNEL_PATH/ksun.patch"
+    # Apply SUSFS patch to KernelSU (idempotent: skip if already applied)
+    if patch -d KernelSU -p1 --dry-run --no-backup-if-mismatch < "$KERNEL_PATH/ksun.patch" >/dev/null 2>&1; then
+        patch -d KernelSU -p1 --no-backup-if-mismatch < "$KERNEL_PATH/ksun.patch"
+    elif patch -d KernelSU -p1 --dry-run -R --no-backup-if-mismatch < "$KERNEL_PATH/ksun.patch" >/dev/null 2>&1; then
+        echo "==> ksun.patch already applied"
+    else
+        echo "ERROR: ksun.patch does not apply to the KernelSU tree" >&2
+        exit 1
+    fi
     _compile_and_package "$KSU_OUT_DIR" "$KSU_DEFCONFIG" "NoVA-KSU"
 
     # KernelSU-Next's Kbuild touches the normal defconfig too, revert that
