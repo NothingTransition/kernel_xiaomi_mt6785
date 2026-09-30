@@ -236,7 +236,7 @@ diff --git a/kernel/hook/setuid_hook.c b/kernel/hook/setuid_hook.c
 index 3184deb2..f405248e 100644
 --- a/kernel/hook/setuid_hook.c
 +++ b/kernel/hook/setuid_hook.c
-@@ -21,8 +21,67 @@
+@@ -21,8 +21,68 @@
  #include "hook/hook_manager.h"
  #include "feature/kernel_umount.h"
  #include "compat/kernel_compat.h"
@@ -259,6 +259,7 @@ index 3184deb2..f405248e 100644
 +}
 +
 +extern u32 susfs_zygote_sid;
++extern bool susfs_is_sid_equal(const struct cred *cred, u32 sid2);
 +extern struct cred *ksu_cred;
 +extern struct work_struct susfs_extra_works;
 +
