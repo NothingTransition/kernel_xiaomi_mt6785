@@ -726,3 +726,24 @@ index 1bfa9952..3e41cf17 100644
  	// Check if this is a request to install KSU fd
  	if (magic2 == KSU_INSTALL_MAGIC2) {
  		struct ksu_install_fd_tw *tw;
+diff --git a/kernel/sulog/event.c b/kernel/sulog/event.c
+--- a/kernel/sulog/event.c
++++ b/kernel/sulog/event.c
+@@ -64,7 +64,7 @@
+ #if KERNEL_VERSION(4, 19, 0) <= LINUX_VERSION_CODE
+ 	ktime_get_boottime_ts64(&ts);
+ #else
+-	get_monotonic_boottime(&ts);
++	get_monotonic_boottime64(&ts);
+ #endif
+     entry.s_time = (uint32_t)ts.tv_sec;
+     entry.data = (uint32_t)uid;
+@@ -99,7 +99,7 @@
+ #if KERNEL_VERSION(4, 19, 0) <= LINUX_VERSION_CODE
+ 	ktime_get_boottime_ts64(&ts);
+ #else
+-	get_monotonic_boottime(&ts);
++	get_monotonic_boottime64(&ts);
+ #endif
+     uptime = (uint32_t)ts.tv_sec;
+     if (copy_to_user((void __user *)(uintptr_t)sbuf.uptime_ptr, &uptime, sizeof(uptime)))
