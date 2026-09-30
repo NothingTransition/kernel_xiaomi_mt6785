@@ -8,11 +8,20 @@
    42 | #    define ZSTD_DEPRECATED(message) __attribute__((deprecated(message)))
       |                                                     ^
 1 warning generated.
-../drivers/kernelsu/hook/setuid_hook.c:94:10: error: implicit declaration of function 'susfs_is_sid_equal' [-Werror,-Wimplicit-function-declaration]
-   94 |     if (!susfs_is_sid_equal(current_cred(), susfs_zygote_sid)) {
-      |          ^
-1 error generated.
-make[3]: *** [../scripts/Makefile.build:359: drivers/kernelsu/hook/setuid_hook.o] Error 1
+../drivers/kernelsu/sulog/event.c:67:25: error: incompatible pointer types passing 'struct timespec64 *' to parameter of type 'struct timespec *' [-Werror,-Wincompatible-pointer-types]
+   67 |         get_monotonic_boottime(&ts);
+      |                                ^~~
+../include/linux/timekeeping32.h:84:60: note: passing argument to parameter 'ts' here
+   84 | static inline void get_monotonic_boottime(struct timespec *ts)
+      |                                                            ^
+../drivers/kernelsu/sulog/event.c:102:25: error: incompatible pointer types passing 'struct timespec64 *' to parameter of type 'struct timespec *' [-Werror,-Wincompatible-pointer-types]
+  102 |         get_monotonic_boottime(&ts);
+      |                                ^~~
+../include/linux/timekeeping32.h:84:60: note: passing argument to parameter 'ts' here
+   84 | static inline void get_monotonic_boottime(struct timespec *ts)
+      |                                                            ^
+2 errors generated.
+make[3]: *** [../scripts/Makefile.build:359: drivers/kernelsu/sulog/event.o] Error 1
 make[2]: *** [../scripts/Makefile.build:674: drivers/kernelsu] Error 2
 make[1]: *** [/home/runner/work/kernel_xiaomi_mt6785/kernel_xiaomi_mt6785/Makefile:1274: drivers] Error 2
 make[1]: *** Waiting for unfinished jobs....
