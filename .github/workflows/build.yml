@@ -12,6 +12,8 @@ jobs:
     name: "🐎 Build KernelSU + SUSFS + NoMount kernel"
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    permissions:
+      contents: write
 
     steps:
       - name: "😄 Checkout"
@@ -43,9 +45,40 @@ jobs:
           echo "LD  = $(ld.lld --version | head -n1)"
 
       - name: "🚀 Build (KernelSU v3.4.0-legacy + SUSFS v2.3.0 + NoMount)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
-          bash ./nova-build.sh -k 2>&1 | tee build.log
+          rc=0
+          bash ./nova-build.sh -k 2>&1 | tee build.log || rc=$?
+          if [ "$rc" -eq 0 ]; then exit 0; fi
+
+          echo "Build failed with rc=$rc"
+
+          # 1) tail into the job summary (readable from the run page HTML)
+          { echo "### ❌ build.log tail (rc=$rc)"; echo '```'; tail -n 120 build.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+          # 2) one annotation with the tail (shows on the run page)
+          ANN=$(tail -c 2500 build.log | python3 -c 'import sys; d=sys.stdin.read().replace("%","%25").replace("\r",""); print("%0A".join(d.split("\n")))')
+          echo "::error title=Build failed (rc=$rc)::$ANN"
+
+          # 3) full logs -> ci-logs branch (fetchable via git afterwards)
+          TDIR=$(mktemp -d)
+          if ! git clone --depth 1 --branch ci-logs \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$TDIR" 2>/dev/null; then
+            rm -rf "$TDIR"; mkdir -p "$TDIR"
+            git -C "$TDIR" init -q
+            git -C "$TDIR" remote add origin \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
+          cp build.log "$TDIR/build.log"
+          if [ -f out-ksu/error.log ]; then cp out-ksu/error.log "$TDIR/error.log"; fi
+          git -C "$TDIR" add -f build.log || true
+          if [ -f "$TDIR/error.log" ]; then git -C "$TDIR" add -f error.log; fi
+          git -C "$TDIR" -c user.name=ci -c user.email=ci@invalid \
+            commit --allow-empty -q -m "log ${GITHUB_SHA} rc=$rc"
+          git -C "$TDIR" push -q origin HEAD:ci-logs -f
+          exit "$rc"
 
       - name: "📜 Upload build logs"
         if: always()
